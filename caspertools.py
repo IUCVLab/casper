@@ -2,7 +2,7 @@ import texttools
 
 def parse_raw(text : str) -> list:
     '''
-    Метод принимает на вход сырые данные пользователя и преобразует из список
+    Метод принимает на вход сырые данные пользователя и преобразует их в список
     записей {title: заголовок, authors: авторы}
     '''
     lines = [line.strip() for line in text.split('\n') if line.strip()]
@@ -96,7 +96,7 @@ def _filter_relevant_papers(feed, item, LD=10, IOU=.01):
 def collect_paper_meta(sources):
     '''
     Метод принимает входные данные от пользователя, осуществляет поиск и позвращает только те статьи,
-    что соотвествуют критериям
+    что соответствуют критериям
     '''
     result = []
     for paper in sources:
@@ -129,7 +129,7 @@ def _download(url, filename):
 def _recognize(fromfile, tofile):
     '''
     Метод рапознает текст документа fromfile, используя библиотеку textract
-    Также мето производит очистку текста и раскрывает аббревиатуры
+    Также метод производит очистку текста и раскрывает аббревиатуры
     '''
     import textract
     try:
