@@ -1,6 +1,10 @@
 import texttools
 
-def parse_raw(text):
+def parse_raw(text : str) -> list:
+    '''
+    Метод принимает на вход сырые данные пользователя и преобразует из список
+    записей {title: заголовок, authors: авторы}
+    '''
     lines = [line.strip() for line in text.split('\n') if line.strip()]
     result = []
     for line in lines:
@@ -18,16 +22,24 @@ def parse_raw(text):
     return result
 
 
-def _get_relevant_preprints(title, n=100):
+def _get_relevant_preprints(title : str, n=100) -> list:
+    '''
+    Метод принимает на вход заголовок статьи и ищет с помощью API arxiv.org
+    статьи-кандидаты. По умолчанию ищет 100, так как у сервиса не очень хороший поиск
+    '''
     api = f"http://export.arxiv.org/api/query?max_results={n}&search_query="
     import time
     import feedparser
-    # 3 seconds delay is due to arxiv API requirements
+    # 3 секунды задержки нужны, чтобы соблюдать пользовательское соглашение сайта
     time.sleep(3)
     return feedparser.parse(api + title.replace(' ', '+'))
 
 
-def _feed_to_papers(feed):
+def _feed_to_papers(feed : dict) -> list:
+    '''
+    Метод принимает результаты поиска сервиса и преобразует их в нужный нам формат записей.
+    На выходе метода - список записей
+    '''
     result = []
     for e in feed["entries"]:
         id = e['id'][21:].replace('/', '_')
@@ -48,6 +60,11 @@ def _feed_to_papers(feed):
 
 
 def _filter_relevant_papers(feed, item, LD=10, IOU=.01):
+    '''
+    Метод оставляет в списке найденных статей только те, что четко соответствуют критериям поиска
+    Если расстояние Левенштейна более 10 - кандидат отклоняется
+    Если пользователь ввел список автором - в нем должны быть совпадения выше 0.01 по мере Жаккарда
+    '''
     import itertools
     import Levenshtein
     title = item['title'].lower()
@@ -77,6 +94,10 @@ def _filter_relevant_papers(feed, item, LD=10, IOU=.01):
 
 
 def collect_paper_meta(sources):
+    '''
+    Метод принимает входные данные от пользователя, осуществляет поиск и позвращает только те статьи,
+    что соотвествуют критериям
+    '''
     result = []
     for paper in sources:
         feed = _get_relevant_preprints(paper['title'])
@@ -90,6 +111,9 @@ def collect_paper_meta(sources):
 
 
 def _download(url, filename):
+    '''
+    Метод скачивает файл по ссылке url в указанное расположение filename
+    '''
     import requests
     import shutil
     with requests.get(url, stream=True, allow_redirects=True) as r:
@@ -103,6 +127,10 @@ def _download(url, filename):
 
 
 def _recognize(fromfile, tofile):
+    '''
+    Метод рапознает текст документа fromfile, используя библиотеку textract
+    Также мето производит очистку текста и раскрывает аббревиатуры
+    '''
     import textract
     try:
         bin = textract.process(fromfile, method='pdfminer')
@@ -121,7 +149,11 @@ def _recognize(fromfile, tofile):
     return True
 
 
-def download_and_parse_papers(index, folder="static/null", keepPDF=False, delay=3):
+def download_and_parse_papers(index, folder="static/null", keepPDF=False, delay=3) -> str:
+    '''
+    Метод скачивает статьи, распознает и упаковывает в архив
+    Возвращает ссылку на архив
+    '''
     import shutil
     import time
     import os
@@ -134,13 +166,12 @@ def download_and_parse_papers(index, folder="static/null", keepPDF=False, delay=
         yearfolder = os.path.join(fullfolder, str(item['year']))
         if not os.path.exists(yearfolder):
             os.mkdir(yearfolder)
-        # + '.pdf' - hack
+        # + '.pdf' - добавляет к имени файла
         url = item['pdfurl'].replace('http:', 'https:') + '.pdf'
         short_file = item['id'] + '.pdf'
         filename = os.path.join(yearfolder, short_file)
-        # item['pdffile'] = filename
         if os.path.exists(filename):
-            # hack for the cases file was downloaded partially
+            # Проверка на частично скачанный файл
             if os.path.getsize(filename) > 16 * 1024:
                 continue
         time.sleep(delay)
@@ -149,11 +180,11 @@ def download_and_parse_papers(index, folder="static/null", keepPDF=False, delay=
         if not _recognize(filename, filename.replace('.pdf', '.txt')):
             continue
 
-        # delete PDFs if they are not requested by the user
+        # удаляет исходный файл, если он не запрошен
         if not keepPDF:
             os.remove(filename)
 
-    # final steps -- achiving the data
+    # последний шаг - архивация 
     archfile = "dump"
     shutil.make_archive(folder + "/" + archfile, 'zip', folder)
     return archfile + ".zip"

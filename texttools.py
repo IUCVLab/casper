@@ -2,6 +2,9 @@ from cgitb import reset
 
 
 def _clean_numbers(string):
+    '''
+    Метод очищает строку от числовых данных
+    '''
     import re
     string = re.sub('\\|\\d+i', '', string)
     string = re.sub('\\|\\d+>', '', string)
@@ -15,12 +18,18 @@ def _clean_numbers(string):
 
 
 def _remove_greek(string):
+    '''
+    Метод удаляет из текста греческие буквы и математические символы
+    '''
     import re
     string = re.sub("[ΑαΒβΓγΔδΕεΖζΗηΘθΙιΚκΛλΜμΝνΞξΟοΠπΡρΣσςΤτΥυΦφΧχΨψΩω⊗†↓→∞↑↓=↔]+", "", string)
     return string
 
 
 def _cut_tail(text):
+    '''
+    Метод обрезает неинформативные части статей - благодарности, списки литературы
+    '''
     tails = ['acknowledgements\n', 'references\n', 'bibliograpy\n', 
          'confilicts of interest\n', "acknowledges support", "are grateful to the funding",
          'acknowledgements.', 'acknowledgment –', 'we thank', 'is gratefully acknowledged', 'appendix a', 'references .',
@@ -41,6 +50,9 @@ def _cut_tail(text):
 
 
 def clean_text(text):
+    '''
+    Общий метод очистки текста. Вызывает все другие методы и нормализует пробелы и переносы строк.
+    '''
     text = _cut_tail(text)
     text = text.replace('\r\n\r\n', ' ').replace('\n\n', ' ')
     text = '\n'.join([line for line in text.split('\n') if len(line.replace(' ', '')) > 3])
@@ -53,6 +65,9 @@ def clean_text(text):
 
 
 def detect_abbreviations(text):
+    '''
+    Метод находит стандартный способ введения аббревиатур и возвращает словарь с ними
+    '''
     import re
     result = {}
     abbr = re.compile("\(([A-Z]{2,})\)")
@@ -67,6 +82,9 @@ def detect_abbreviations(text):
 
 
 def expand_abbreviations(text, abbreviations):
+    '''
+    Метод для заданного словаря аббревиатур подменяет их в тексте на полные обозначения
+    '''
     import re
     for key in abbreviations:
         text = re.sub(f"\\s{key}", " " + abbreviations[key], text)

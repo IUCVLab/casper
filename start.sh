@@ -1,1 +1,1 @@
-export FLASK_APP=server.py ; export FLASK_ENV=development ; python -m flask run --port=1234 --host=localhost
+export FLASK_APP=server.py ; export FLASK_ENV=development ; python3 -m flask run --port=1234 --host=localhost
