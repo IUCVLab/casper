@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+    <head>
+        <script>
+            var RAW_INPUT = null;
+            var PARSED_DOCUMENTS = null;
+
+            function _show_table(data) {
+                let result = "<table><tr><th>Год/ID</th><th>Название и ссылка</th><th>Авторы</th><tr>";
+                for (const item of data) {
+                    result += `<tr><td>${item['year']}/${item['id']}</td><td><a href="${item['pdfurl']}">${item['title']}</a></td><td>${item['authors']}</td></tr>`;
+                }
+                result += "</table>";
+                document.getElementById('paper-metadata').innerHTML = result;
+            }
+
+
+            function _download_script(data) {
+                // mkdir -p 2010 2011
+                // wget -r -O 2010/123  --user-agent="Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0" http://arxiv.org/pdf/2104.04692v3
+                let dates = new Set();
+
+                let result = "mkdir -p";
+                let downies = "\n";
+                for (const item of data) {
+                    dates.add(item['year']);
+                    downies += `wget -r -O ${item['year']}/${item['id']}.pdf  --user-agent="Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0" ${item['pdfurl']}`
+                    downies += '\nsleep 3\n';
+                }
+                console.log(dates);
+                for (const d of dates) {
+                    result += " " + d;
+                }
+                return result + downies;  
+            }
+
+            function _show_download_script(data) {
+                document.getElementById('download-script').innerHTML = _download_script(data);
+            }
+
+
+            function parse_input() {
+                var text = document.getElementById('inpData').value;
+                console.log(text);
+                let xhr = new XMLHttpRequest();
+                const url = "parse_input";        
+                xhr.open('POST', url, true);
+                xhr.setRequestHeader('Content-type', 'application/json; charset=UTF-8');
+                xhr.send(JSON.stringify({"text" : text}));
+                xhr.onload = function () {
+                    if(xhr.status === 200) {
+                        let result = JSON.parse(xhr.responseText);
+                        console.log(result);
+                        RAW_INPUT = result;
+                        document.getElementById('text-validator').innerText = xhr.responseText;
+                    }
+                }
+            }
+
+            function get_preprints() {
+                var text = document.getElementById('inpData').value;
+                console.log(text);
+                let xhr = new XMLHttpRequest();
+                const url = "get_preprints";              
+                xhr.open('POST', url, true);
+                xhr.setRequestHeader('Content-type', 'application/json; charset=UTF-8');
+                xhr.send(JSON.stringify({"text" : text}));
+                xhr.onload = function () {
+                    if(xhr.status === 200) {
+                        let result = JSON.parse(xhr.responseText);
+                        console.log(result);
+                        _show_table(result);
+                        _show_download_script(result);
+                        PARSED_DOCUMENTS = result;
+                    }
+                }
+            }
+
+
+            function down_and_parse() {
+                const url = "parse_and_save";
+                let xhr = new XMLHttpRequest();
+                const addPDF = document.getElementById('keep-pdf').checked;
+                console.log(addPDF);
+                xhr.open('POST', url, true);
+                xhr.setRequestHeader('Content-type', 'application/json; charset=UTF-8');
+                xhr.send(JSON.stringify({
+                    "keep-pdf": addPDF,
+                    "items": PARSED_DOCUMENTS
+                }));
+                xhr.onload = function () {
+                    if(xhr.status === 200) {
+                        let result = JSON.parse(xhr.responseText);
+                        document.getElementById('get-data').innerHTML = `<a href="${result['url']}">GET ARCHIVE</a>`;
+                        console.log(result);
+                    }
+                }
+            }
+        </script>
+    </head>
+<body>
+    Чтобы скачать нужные вам статьи нужно выполнить несколько простых шагов.
+<hr/>
+В это окошко вы можете вставить список публикаций, которые вы хотите скачать. 
+Одна строчка - одна публикация. Можете указывать только название, 
+или (чтобы избежать ложных срабатываний) добавить через знак табуляции коллектив авторов.
+Для этого достаточно скопировать и вставить сюда один (или два) столбика из Excel, Numbers или OpenOffice.
+
+<textarea rows="20" cols="100" id="inpData">Attention is all you need
+synthesis of quantum logic circuits</textarea>
+<br/>
+<input type="button" value="Проверить" onclick="parse_input()"/>
+<div id="text-validator"></div>
+<hr/>
+<input type="button" value="Получить метаданные" onclick="get_preprints()"/>
+<br/>
+<div id="paper-metadata"></div>
+<br/>
+Здесь появится скрипт для самостоятельного скачивания статей в PDF.
+Если вам нужны оригинальные PDF статей, тогда вставьте этот текст в консоль MacOS или Linux.
+Он скачает вас все препринты в PDF и разместит их папки по годам.
+<br/>
+<textarea id="download-script" rows="3" cols="50"></textarea>
+<hr/>
+
+А теперь давайте скачаем и распознаем все эти документы.
+Мы подготовим архив с исходными текстами и разместим тут ссылку на скачивание.
+Если вы хотите, чтобы в архиве также были оригинальные PDF-файлы, поставьте галочку:
+
+<input type="checkbox" id="keep-pdf">добавить в архив PDF-файлы</input>
+<br/>
+<input type="button" value="Скачать" onclick="down_and_parse()"/>
+<br/>
+<div id="get-data"></div>
+
+<hr/>
+</body>
+</html>
