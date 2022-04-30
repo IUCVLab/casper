@@ -1,6 +1,55 @@
 <!doctype html>
 <html>
     <head>
+        <title>CASPER</title>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet"/>
+
+        <style>
+            table {
+                border: 1px dashed gray;
+            }
+            td, th {
+                border: 1px dashed gray;
+            }
+            div#main {
+                text-align: center;
+                width: 90%;
+                font-family: 'Open Sans', san-serif;
+            }
+           div .link {
+                display: block;
+                border-radius: 16px;
+                font-size: 32px;
+                border: 1px dashed black;
+                margin : 30px auto 30px auto;
+                padding: 2px 3px 2px 3px;
+                background-color: #CCCCFF;
+                font-family: 'Open Sans', san-serif;
+                color: #0000AA;
+                max-width: 70%;
+                min-height: 40px;
+                text-align: center;
+                vertcial-align: center;
+            }
+            div .link * {
+                vertical-align: middle;
+            } 
+            div .link a:link {
+                text-decoration: none;
+                color: #0000AA;
+            }
+            div .link a:visited {
+                text-decoration: none;
+                color: #0000AA;
+            }
+            
+            div.link.small {
+                font-size: 12px;
+            }
+            h2 {
+                font-family: 'Open Sans', san-serif;
+            }
+        </style>            
         <script>
             var RAW_INPUT = null;
             var PARSED_DOCUMENTS = null;
@@ -91,7 +140,7 @@
                 xhr.onload = function () {
                     if(xhr.status === 200) {
                         let result = JSON.parse(xhr.responseText);
-                        document.getElementById('get-data').innerHTML = `<a href="${result['url']}">GET ARCHIVE</a>`;
+                        document.getElementById('get-data').innerHTML = `<a href="${result['url']}">Скачать результат</a>`;
                         console.log(result);
                     }
                 }
@@ -99,40 +148,54 @@
         </script>
     </head>
 <body>
+    <div id="main">
+    <h2>CASPER соберёт для вас препринты научных статей по их названиям</h2>
+    <br/>
     Чтобы скачать нужные вам статьи нужно выполнить несколько простых шагов.
 <hr/>
+    <h2>Входные данные</h2><br/>
 В это окошко вы можете вставить список публикаций, которые вы хотите скачать. 
-Одна строчка - одна публикация. Можете указывать только название, 
+Одна строчка - одна публикация. Можете указывать только название статьи, 
 или (чтобы избежать ложных срабатываний) добавить через знак табуляции коллектив авторов.
 Для этого достаточно скопировать и вставить сюда один (или два) столбика из Excel, Numbers или OpenOffice.
-
-<textarea rows="20" cols="100" id="inpData">Attention is all you need
+<br/>
+<textarea rows="12" cols="100" id="inpData">Attention is all you need
 synthesis of quantum logic circuits</textarea>
 <br/>
-<input type="button" value="Проверить" onclick="parse_input()"/>
-<div id="text-validator"></div>
+<input type="button" value="Проверить как сервис увидит ваш текст" onclick="parse_input()"/>
+<div id="text-validator" style="font-size: x-small;"></div>
 <hr/>
+<h2>Получение данных о статьях</h2>
+Нажав на кнопку ниже вы запустите сбор данных о ваших статьях с сайта arxiv.org. 
+Из-за особенностей пользовательского соглашения, каждая на каждый заголовок из вашего списка будет уходить 3-5 секунд. 
+Приготовьтесь немного подождать. После окончания перед вами появится таблица со статьями, а также скрипт для самостоятельного скачивания.
+<br/>
+
 <input type="button" value="Получить метаданные" onclick="get_preprints()"/>
 <br/>
 <div id="paper-metadata"></div>
 <br/>
-Здесь появится скрипт для самостоятельного скачивания статей в PDF.
+Скрипт для самостоятельного скачивания статей в PDF.
 Если вам нужны оригинальные PDF статей, тогда вставьте этот текст в консоль MacOS или Linux.
 Он скачает вас все препринты в PDF и разместит их папки по годам.
 <br/>
 <textarea id="download-script" rows="3" cols="50"></textarea>
 <hr/>
+<h2>Архив со статьями и распознанными текстами</h2>
 
-А теперь давайте скачаем и распознаем все эти документы.
-Мы подготовим архив с исходными текстами и разместим тут ссылку на скачивание.
+Следующее действие скачает, распознает документы, очистит их и раскроет аббревиатуры.
+Не пропускайте предыдущий шаг, он нужен чтобы подготовить статьи-кандидаты.
+<br/>
+Мы подготовим архив с исходными текстами и разместим ниже ссылку на скачивание. На каждую статью из списка также потребуется 3-5 секунд, запаситесь чаем.
 Если вы хотите, чтобы в архиве также были оригинальные PDF-файлы, поставьте галочку:
-
-<input type="checkbox" id="keep-pdf">добавить в архив PDF-файлы</input>
+<br/>
+<input type="checkbox" id="keep-pdf"/><label for="keep-pdf">добавить в архив PDF-файлы</label> 
 <br/>
 <input type="button" value="Скачать" onclick="down_and_parse()"/>
 <br/>
-<div id="get-data"></div>
+<div id="get-data" class="link"></div>
 
 <hr/>
+</div>
 </body>
 </html>

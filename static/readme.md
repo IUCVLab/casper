@@ -1,0 +1,1 @@
+This folder will store downloads and parsing results
